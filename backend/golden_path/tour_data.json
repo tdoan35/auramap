@@ -1,0 +1,41 @@
+{
+  "tour_id": "golden_path_sf",
+  "route": {
+    "start": {"lat": 37.7844, "lng": -122.4006, "name": "Moscone Center"},
+    "end": {"lat": 37.7955, "lng": -122.3937, "name": "Ferry Building"}
+  },
+  "segments": [
+    {
+      "segment_id": 1,
+      "type": "opening",
+      "label": "Welcome to San Francisco",
+      "audio_url": "/golden-audio/segment_1.mp3",
+      "transcript": "Welcome to San Francisco, a city built on ambition, reinvention, and the restless energy of dreamers. You're starting your walk near Moscone Center, right in the heart of SoMa — South of Market. This neighborhood has transformed more times than almost any other patch of American soil. From sand dunes to shipping yards, from the dot-com boom to today's gleaming towers, SoMa never stops reinventing itself. Over the next few minutes, you're going to walk north toward the waterfront, and I'll share some of the stories that make these streets unforgettable. Let's go.",
+      "duration_s": 35
+    },
+    {
+      "segment_id": 2,
+      "type": "transit",
+      "label": "Walking to the Embarcadero",
+      "audio_url": "/golden-audio/segment_2.mp3",
+      "transcript": "As you head north, take a moment to look up. The skyline here tells a story of ambition. That cluster of glass and steel towers? Many of them went up in just the last decade. But this area has a much longer memory. In 1906, everything around you was leveled by the great earthquake and fire. The city rebuilt in record time — San Franciscans have never been the type to sit still. You're walking along what used to be the shoreline of Yerba Buena Cove. That's right — the ground beneath your feet was once underwater. The city literally built new land to expand. As you approach Market Street, notice how the grid shifts. Market cuts diagonally through the city, and the streets on either side don't quite line up. It's one of those charming quirks that makes navigation here an adventure.",
+      "duration_s": 55
+    },
+    {
+      "segment_id": 3,
+      "type": "poi_arrival",
+      "label": "The Ferry Building",
+      "audio_url": "/golden-audio/segment_3.mp3",
+      "transcript": "And here it is — the Ferry Building, standing proud at the foot of Market Street with its iconic clock tower reaching 245 feet into the sky. This building has one of the great comeback stories in San Francisco. When it opened in 1898, it was the second busiest transit terminal in the world, right behind Charing Cross in London. Fifty thousand commuters passed through here every day on ferries crossing the bay. Then the bridges came — the Bay Bridge in 1936, the Golden Gate shortly after — and almost overnight, the ferries disappeared. For decades, this gorgeous building sat hidden behind an elevated freeway, forgotten and neglected. Then came the 1989 Loma Prieta earthquake. The freeway was so damaged it had to be torn down, and suddenly the Ferry Building was visible again. The city saw its chance. A massive restoration brought the building back to life, and today it's one of the finest food halls in America. Step inside and you'll find artisan cheese makers, local oyster bars, and some of the best coffee in a city that takes its coffee very seriously.",
+      "duration_s": 75
+    },
+    {
+      "segment_id": 4,
+      "type": "outro",
+      "label": "A City That Keeps Rebuilding",
+      "audio_url": "/golden-audio/segment_4.mp3",
+      "transcript": "As you stand here by the waterfront, look out across the bay. On a clear day, you can see Alcatraz, Angel Island, and the hills of Marin beyond. This view hasn't changed much in a hundred years, but everything behind you has been rebuilt, reimagined, and reinvented — sometimes more than once. That's the thread that runs through everything we've seen today. San Francisco doesn't preserve itself in amber. It breaks, it burns, it shakes apart, and every single time, it comes back with something better. From the sand dunes of SoMa to this beautiful waterfront marketplace, you've walked through layers of that story. Thanks for joining me today. Enjoy the Ferry Building, grab something delicious, and keep exploring. San Francisco always has one more story to tell.",
+      "duration_s": 50
+    }
+  ]
+}
