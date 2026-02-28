@@ -5,8 +5,7 @@ import { Platform } from "react-native";
 // For simulator: localhost works fine
 export const API_BASE_URL = "https://cool-days-matter.loca.lt";
 
-// Google Maps API key (loaded from app.json > extra or hardcoded for hackathon)
-export const GOOGLE_MAPS_API_KEY = "AIzaSyAfrNAnatP8FaKPJUir75pQIEme-Khk1f0";
+// Google Maps API key (loaded from app.json > extra or hardcoded for hackathon
 
 // POI discovery
 export const POI_DISCOVERY_RADIUS_M = 200;
