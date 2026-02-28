@@ -1,23 +1,23 @@
-import React, { useEffect } from "react";
+import { Colors } from "@/constants/theme";
+import { useAppStore } from "@/stores/useAppStore";
+import { Ionicons } from "@expo/vector-icons";
+import { useEffect } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
   Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withRepeat,
-  withTiming,
   Easing,
   FadeInDown,
   FadeInUp,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
 } from "react-native-reanimated";
-import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "@/constants/theme";
-import { useAppStore } from "@/stores/useAppStore";
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
 
@@ -59,14 +59,20 @@ function AnimatedOrb({
 
   useEffect(() => {
     tx.value = withRepeat(
-      withTiming(rangeX, { duration: durationX, easing: Easing.inOut(Easing.quad) }),
+      withTiming(rangeX, {
+        duration: durationX,
+        easing: Easing.inOut(Easing.quad),
+      }),
       -1,
-      true
+      true,
     );
     ty.value = withRepeat(
-      withTiming(rangeY, { duration: durationY, easing: Easing.inOut(Easing.quad) }),
+      withTiming(rangeY, {
+        duration: durationY,
+        easing: Easing.inOut(Easing.quad),
+      }),
       -1,
-      true
+      true,
     );
   }, []);
 
@@ -175,8 +181,8 @@ const ORBS: OrbConfig[] = [
 const FEATURES = [
   {
     icon: "navigate-outline" as const,
-    title: "AI-Generated Audio Tours",
-    desc: "Personalized narration for any walking route",
+    title: "Personal Live Intelligent Guide",
+    desc: "Personalized narration for any new city",
   },
   {
     icon: "mic-outline" as const,
@@ -221,7 +227,7 @@ export default function WelcomeScreen() {
           entering={FadeInDown.delay(400).duration(600)}
           style={styles.title}
         >
-          Welcome to AuraMap
+          AuraMap
         </Animated.Text>
 
         {/* Tagline */}
@@ -229,7 +235,7 @@ export default function WelcomeScreen() {
           entering={FadeInDown.delay(500).duration(600)}
           style={styles.tagline}
         >
-          Your tour guide that never stops listening
+          your personal ai guide for everywhere
         </Animated.Text>
 
         {/* Feature list */}
@@ -249,7 +255,6 @@ export default function WelcomeScreen() {
             </View>
           ))}
         </Animated.View>
-
       </View>
 
       {/* CTA pinned to bottom */}

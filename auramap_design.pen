@@ -270,6 +270,209 @@
               "fill": "#FFFFFF"
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "tnvRT",
+          "x": 16,
+          "y": 136,
+          "name": "POI Filters",
+          "width": 361,
+          "gap": 8,
+          "children": [
+            {
+              "type": "frame",
+              "id": "3cZgM",
+              "name": "Filter All",
+              "fill": "$accent",
+              "cornerRadius": 20,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#0EA5E920",
+                "offset": {
+                  "x": 0,
+                  "y": 2
+                },
+                "blur": 6
+              },
+              "gap": 6,
+              "padding": [
+                8,
+                14
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "uvXhx",
+                  "name": "allIcon",
+                  "width": 14,
+                  "height": 14,
+                  "iconFontName": "sparkles",
+                  "iconFontFamily": "lucide",
+                  "fill": "#FFFFFF"
+                },
+                {
+                  "type": "text",
+                  "id": "fdvsQ",
+                  "name": "allLabel",
+                  "fill": "#FFFFFF",
+                  "content": "All",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "O0aRJ",
+              "name": "Filter Architecture",
+              "fill": "#FFFFFF",
+              "cornerRadius": 20,
+              "stroke": {
+                "thickness": 1,
+                "fill": "$border-subtle"
+              },
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#00000008",
+                "offset": {
+                  "x": 0,
+                  "y": 1
+                },
+                "blur": 4
+              },
+              "gap": 6,
+              "padding": [
+                8,
+                14
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "Qyui6",
+                  "name": "archIcon",
+                  "width": 14,
+                  "height": 14,
+                  "iconFontName": "building-2",
+                  "iconFontFamily": "lucide",
+                  "fill": "$text-secondary"
+                },
+                {
+                  "type": "text",
+                  "id": "wR0cn",
+                  "name": "archLabel",
+                  "fill": "$text-primary",
+                  "content": "Architecture",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "fzReY",
+              "name": "Filter History",
+              "fill": "#FFFFFF",
+              "cornerRadius": 20,
+              "stroke": {
+                "thickness": 1,
+                "fill": "$border-subtle"
+              },
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#00000008",
+                "offset": {
+                  "x": 0,
+                  "y": 1
+                },
+                "blur": 4
+              },
+              "gap": 6,
+              "padding": [
+                8,
+                14
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "mowC9",
+                  "name": "histIcon",
+                  "width": 14,
+                  "height": 14,
+                  "iconFontName": "landmark",
+                  "iconFontFamily": "lucide",
+                  "fill": "$text-secondary"
+                },
+                {
+                  "type": "text",
+                  "id": "36MpC",
+                  "name": "histLabel",
+                  "fill": "$text-primary",
+                  "content": "History",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "IbINe",
+              "name": "Filter Coffee",
+              "fill": "#FFFFFF",
+              "cornerRadius": 20,
+              "stroke": {
+                "thickness": 1,
+                "fill": "$border-subtle"
+              },
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#00000008",
+                "offset": {
+                  "x": 0,
+                  "y": 1
+                },
+                "blur": 4
+              },
+              "gap": 6,
+              "padding": [
+                8,
+                14
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "bXvqb",
+                  "name": "coffeeIcon",
+                  "width": 14,
+                  "height": 14,
+                  "iconFontName": "coffee",
+                  "iconFontFamily": "lucide",
+                  "fill": "$text-secondary"
+                },
+                {
+                  "type": "text",
+                  "id": "DQ5N6",
+                  "name": "coffeeLabel",
+                  "fill": "$text-primary",
+                  "content": "Coffee",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "500"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -1286,44 +1489,77 @@
                   "id": "q7JJY",
                   "name": "outTitle",
                   "fill": "$text-primary",
-                  "content": "Your Tour",
+                  "content": "Your Guide",
                   "fontFamily": "Outfit",
                   "fontSize": 22,
                   "fontWeight": "800"
                 },
                 {
                   "type": "frame",
-                  "id": "UDw0F",
-                  "name": "Play Button Disabled",
-                  "fill": "$text-disabled",
-                  "cornerRadius": 20,
-                  "gap": 6,
-                  "padding": [
-                    10,
-                    20
-                  ],
-                  "justifyContent": "center",
+                  "id": "jeZqo",
+                  "name": "Right Actions",
+                  "gap": 8,
                   "alignItems": "center",
                   "children": [
                     {
-                      "type": "icon_font",
-                      "id": "qJH5h",
-                      "name": "playIcon",
-                      "width": 16,
-                      "height": 16,
-                      "iconFontName": "play",
-                      "iconFontFamily": "lucide",
-                      "fill": "#FFFFFF"
+                      "type": "frame",
+                      "id": "UDw0F",
+                      "name": "Play Button Disabled",
+                      "fill": "$text-disabled",
+                      "cornerRadius": 20,
+                      "gap": 6,
+                      "padding": [
+                        10,
+                        20
+                      ],
+                      "justifyContent": "end",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "qJH5h",
+                          "name": "playIcon",
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "play",
+                          "iconFontFamily": "lucide",
+                          "fill": "#FFFFFF"
+                        },
+                        {
+                          "type": "text",
+                          "id": "t6KD4",
+                          "name": "playLabel",
+                          "fill": "#FFFFFF",
+                          "content": "Play",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        }
+                      ]
                     },
                     {
-                      "type": "text",
-                      "id": "t6KD4",
-                      "name": "playLabel",
-                      "fill": "#FFFFFF",
-                      "content": "Play",
-                      "fontFamily": "Inter",
-                      "fontSize": 14,
-                      "fontWeight": "600"
+                      "type": "frame",
+                      "id": "E2Qym",
+                      "name": "Close Tour Button",
+                      "width": 32,
+                      "height": 32,
+                      "fill": "#00000012",
+                      "cornerRadius": 16,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "aWZh3",
+                          "x": 7,
+                          "y": 7,
+                          "name": "closeIcon1",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "x",
+                          "iconFontFamily": "lucide",
+                          "fill": "$text-secondary"
+                        }
+                      ]
                     }
                   ]
                 }
@@ -2340,6 +2576,32 @@
               "fill": "#FFFFFF"
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "o8Q70",
+          "x": 345,
+          "y": 302,
+          "name": "Close Tour Button",
+          "width": 32,
+          "height": 32,
+          "fill": "#00000012",
+          "cornerRadius": 16,
+          "layout": "none",
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "1HDYR",
+              "x": 7,
+              "y": 7,
+              "name": "closeIcon2",
+              "width": 18,
+              "height": 18,
+              "iconFontName": "x",
+              "iconFontFamily": "lucide",
+              "fill": "$text-secondary"
+            }
+          ]
         }
       ]
     },
@@ -2622,7 +2884,7 @@
               "id": "Pk46s",
               "name": "tagline",
               "fill": "$text-secondary",
-              "content": "Your tour guide that never stops listening",
+              "content": "Your guide that never stops listening",
               "fontFamily": "Inter",
               "fontSize": 16,
               "fontWeight": "500"
@@ -2894,7 +3156,7 @@
               "fill": "$text-secondary",
               "textGrowth": "fixed-width",
               "width": 366,
-              "content": "Your tour guide that never stops listening",
+              "content": "Your guide that never stops listening",
               "textAlign": "center",
               "fontFamily": "Inter",
               "fontSize": 16,
@@ -2963,7 +3225,7 @@
                           "id": "LBw8S",
                           "name": "feat1Title",
                           "fill": "$text-primary",
-                          "content": "AI-Generated Audio Tours",
+                          "content": "AI-Powered Guidance",
                           "fontFamily": "Outfit",
                           "fontSize": 16,
                           "fontWeight": "700"

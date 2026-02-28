@@ -14,6 +14,9 @@ router = APIRouter()
 
 GOLDEN_PATH_DIR = Path(__file__).resolve().parent.parent / "golden_path"
 
+# Set to True to force golden path (for demo recordings)
+FORCE_GOLDEN_PATH = True
+
 
 @router.post("/generate")
 async def generate_tour(request: TourGenerateRequest):
@@ -23,6 +26,13 @@ async def generate_tour(request: TourGenerateRequest):
     bus = EventBus.get()
 
     async def event_generator():
+        if FORCE_GOLDEN_PATH:
+            print("FORCE_GOLDEN_PATH enabled — serving golden path")
+            async for event in serve_golden_path():
+                bus.emit_tour(event["event"], json.loads(event["data"]))
+                yield event
+            return
+
         try:
             async with asyncio.timeout(300):
                 async for event in run_tour_pipeline(request, tour_id):
