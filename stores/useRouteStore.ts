@@ -25,6 +25,8 @@ interface RouteStore {
   setDiscoveredPOIs: (pois: POI[]) => void;
   togglePOI: (placeId: string) => void;
   removeStop: (placeId: string) => void;
+  selectMaxPOIs: () => void;
+  deselectAllPOIs: () => void;
   updateLegs: (legs: RouteLeg[]) => void;
   setStops: (stops: POI[]) => void;
   clearRoute: () => void;
@@ -81,6 +83,19 @@ export const useRouteStore = create<RouteStore>((set, get) => ({
       selectedPOIIds: selectedPOIIds.filter((id) => id !== placeId),
       stops: stops.filter((s) => s.place_id !== placeId),
     });
+  },
+
+  selectMaxPOIs: () => {
+    const { discoveredPOIs } = get();
+    const selected = discoveredPOIs.slice(0, POI_SELECTION_LIMIT);
+    set({
+      selectedPOIIds: selected.map((p) => p.place_id),
+      stops: selected,
+    });
+  },
+
+  deselectAllPOIs: () => {
+    set({ selectedPOIIds: [], stops: [] });
   },
 
   updateLegs: (legs) => set({ legs }),

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { Segment, SegmentType, SSEReasoningEvent } from "@/types";
+import { Segment, SegmentType, SSEReasoningEvent, SSEOutlineEvent } from "@/types";
 
 interface ReasoningMessage {
   agent: string;
@@ -13,6 +13,7 @@ interface ReasoningMessage {
 interface TourStore {
   tourId: string | null;
   segments: Segment[];
+  tourTheme: string | null;
   generationPhase: string | null;
   isGenerating: boolean;
   isComplete: boolean;
@@ -21,6 +22,7 @@ interface TourStore {
 
   startGeneration: (tourId: string) => void;
   setPhase: (phase: string) => void;
+  setOutline: (event: SSEOutlineEvent) => void;
   addSegment: (segment: Segment) => void;
   updateSegmentStatus: (id: number, status: Segment["status"]) => void;
   addReasoning: (event: SSEReasoningEvent) => void;
@@ -32,6 +34,7 @@ interface TourStore {
 export const useTourStore = create<TourStore>((set) => ({
   tourId: null,
   segments: [],
+  tourTheme: null,
   generationPhase: null,
   isGenerating: false,
   isComplete: false,
@@ -42,6 +45,7 @@ export const useTourStore = create<TourStore>((set) => ({
     set({
       tourId,
       segments: [],
+      tourTheme: null,
       generationPhase: "starting",
       isGenerating: true,
       isComplete: false,
@@ -51,10 +55,32 @@ export const useTourStore = create<TourStore>((set) => ({
 
   setPhase: (phase) => set({ generationPhase: phase }),
 
+  setOutline: (event) =>
+    set({
+      tourTheme: event.theme,
+      segments: event.segments.map((seg) => ({
+        id: seg.segment_id,
+        type: seg.type as SegmentType,
+        label: seg.label,
+        status: "pending" as const,
+        audioUrl: null,
+        transcript: null,
+        durationS: seg.estimated_duration_s,
+      })),
+    }),
+
   addSegment: (segment) =>
-    set((state) => ({
-      segments: [...state.segments, segment],
-    })),
+    set((state) => {
+      // If the segment already exists (from outline), update it in place
+      const existingIdx = state.segments.findIndex((s) => s.id === segment.id);
+      if (existingIdx >= 0) {
+        const updated = [...state.segments];
+        updated[existingIdx] = segment;
+        return { segments: updated };
+      }
+      // Otherwise append (fallback for no-outline case)
+      return { segments: [...state.segments, segment] };
+    }),
 
   updateSegmentStatus: (id, status) =>
     set((state) => ({
@@ -88,6 +114,7 @@ export const useTourStore = create<TourStore>((set) => ({
     set({
       tourId: null,
       segments: [],
+      tourTheme: null,
       generationPhase: null,
       isGenerating: false,
       isComplete: false,

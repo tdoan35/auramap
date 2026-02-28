@@ -1,72 +1,120 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouteStore } from "@/stores/useRouteStore";
 import { useAppStore } from "@/stores/useAppStore";
+import { Colors } from "@/constants/theme";
 import StopEditor from "./StopEditor";
 
 interface Props {
   onStartTour: () => void;
+  onClose: () => void;
 }
 
-export default function RouteCard({ onStartTour }: Props) {
+export default function RouteCard({ onStartTour, onClose }: Props) {
+  const startLocation = useRouteStore((s) => s.startLocation);
+  const endLocation = useRouteStore((s) => s.endLocation);
   const totalDistanceM = useRouteStore((s) => s.totalDistanceM);
   const totalDurationS = useRouteStore((s) => s.totalDurationS);
   const discoveredPOIs = useRouteStore((s) => s.discoveredPOIs);
   const selectedPOIIds = useRouteStore((s) => s.selectedPOIIds);
+  const selectMaxPOIs = useRouteStore((s) => s.selectMaxPOIs);
+  const deselectAllPOIs = useRouteStore((s) => s.deselectAllPOIs);
   const routeMode = useAppStore((s) => s.routeMode);
   const setRouteMode = useAppStore((s) => s.setRouteMode);
 
-  const distanceKm = (totalDistanceM / 1000).toFixed(1);
+  const handleSetRouteMode = (mode: "direct" | "scenic") => {
+    setRouteMode(mode);
+    if (mode === "scenic") {
+      selectMaxPOIs();
+    } else {
+      deselectAllPOIs();
+    }
+  };
+
+  const distanceMi = (totalDistanceM / 1609.34).toFixed(1);
   const durationMin = Math.ceil(totalDurationS / 60);
+  const routeTitle = `${startLocation?.name ?? ""} \u2192 ${endLocation?.name ?? ""}`;
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Route summary */}
-      <View style={styles.summary}>
+      {/* Title Row */}
+      <View style={styles.titleRow}>
+        <Text style={styles.routeTitle} numberOfLines={1}>
+          {routeTitle}
+        </Text>
+        <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+          <Ionicons name="close" size={16} color={Colors.textSecondary} />
+        </TouchableOpacity>
+      </View>
+
+      {/* Route Stats */}
+      <View style={styles.statsRow}>
         <View style={styles.stat}>
-          <Text style={styles.statValue}>{distanceKm} km</Text>
-          <Text style={styles.statLabel}>Distance</Text>
+          <Ionicons name="footsteps-outline" size={16} color={Colors.textSecondary} />
+          <Text style={styles.statText}>{distanceMi} mi</Text>
         </View>
-        <View style={styles.divider} />
+        <View style={styles.statDot} />
         <View style={styles.stat}>
-          <Text style={styles.statValue}>{durationMin} min</Text>
-          <Text style={styles.statLabel}>Walk Time</Text>
+          <Ionicons name="timer-outline" size={16} color={Colors.textSecondary} />
+          <Text style={styles.statText}>{durationMin} min</Text>
         </View>
-        <View style={styles.divider} />
+        <View style={styles.statDot} />
         <View style={styles.stat}>
-          <Text style={styles.statValue}>{discoveredPOIs.length}</Text>
-          <Text style={styles.statLabel}>POIs Found</Text>
+          <Ionicons name="location-outline" size={16} color={Colors.accent} />
+          <Text style={[styles.statText, styles.statTextAccent]}>
+            {selectedPOIIds.length} POIs
+          </Text>
         </View>
       </View>
 
-      {/* Route mode toggle */}
+      {/* Route Mode Toggle */}
       <View style={styles.modeToggle}>
         <TouchableOpacity
           style={[styles.modeBtn, routeMode === "direct" && styles.modeBtnActive]}
-          onPress={() => setRouteMode("direct")}
+          onPress={() => handleSetRouteMode("direct")}
         >
+          <Ionicons
+            name="arrow-forward"
+            size={16}
+            color={routeMode === "direct" ? Colors.textPrimary : Colors.textTertiary}
+          />
           <Text
-            style={[styles.modeBtnText, routeMode === "direct" && styles.modeBtnTextActive]}
+            style={[
+              styles.modeBtnText,
+              routeMode === "direct" ? styles.modeBtnTextActive : styles.modeBtnTextInactive,
+            ]}
           >
             Direct
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.modeBtn, routeMode === "scenic" && styles.modeBtnActive]}
-          onPress={() => setRouteMode("scenic")}
+          onPress={() => handleSetRouteMode("scenic")}
         >
+          <Ionicons
+            name="leaf-outline"
+            size={16}
+            color={routeMode === "scenic" ? Colors.textPrimary : Colors.textTertiary}
+          />
           <Text
-            style={[styles.modeBtnText, routeMode === "scenic" && styles.modeBtnTextActive]}
+            style={[
+              styles.modeBtnText,
+              routeMode === "scenic" ? styles.modeBtnTextActive : styles.modeBtnTextInactive,
+            ]}
           >
             Scenic
           </Text>
         </TouchableOpacity>
       </View>
 
-      {/* Stop editor (scenic mode) */}
-      {routeMode === "scenic" && <StopEditor />}
+      {/* Divider */}
+      <View style={styles.divider} />
 
-      {/* Start Tour button */}
+      {/* Stops Section */}
+      <StopEditor />
+
+      {/* Start Tour Button */}
       <TouchableOpacity
         style={[
           styles.startBtn,
@@ -74,7 +122,9 @@ export default function RouteCard({ onStartTour }: Props) {
         ]}
         onPress={onStartTour}
         disabled={routeMode === "scenic" && selectedPOIIds.length === 0}
+        activeOpacity={0.8}
       >
+        <Ionicons name="headset-outline" size={20} color="#FFFFFF" />
         <Text style={styles.startBtnText}>Start Tour</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -85,67 +135,118 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  summary: {
+  // Title Row
+  titleRow: {
     flexDirection: "row",
-    justifyContent: "space-around",
     alignItems: "center",
-    paddingVertical: 16,
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  routeTitle: {
+    flex: 1,
+    fontSize: 20,
+    fontWeight: "800",
+    color: Colors.textPrimary,
+    marginRight: 12,
+  },
+  closeBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.bgSurface,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  // Route Stats
+  statsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+    marginBottom: 20,
   },
   stat: {
+    flexDirection: "row",
     alignItems: "center",
+    gap: 4,
   },
-  statValue: {
-    color: "#fff",
-    fontSize: 22,
-    fontWeight: "700",
+  statText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: Colors.textSecondary,
   },
-  statLabel: {
-    color: "#888",
-    fontSize: 12,
-    marginTop: 2,
+  statTextAccent: {
+    color: Colors.accent,
   },
-  divider: {
-    width: 1,
-    height: 30,
-    backgroundColor: "rgba(255,255,255,0.15)",
+  statDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.textDisabled,
   },
+  // Route Mode Toggle
   modeToggle: {
     flexDirection: "row",
-    backgroundColor: "rgba(255,255,255,0.08)",
-    borderRadius: 12,
-    padding: 3,
-    marginBottom: 16,
+    backgroundColor: Colors.bgSurface,
+    borderRadius: 22,
+    padding: 4,
+    height: 44,
+    marginBottom: 20,
   },
   modeBtn: {
     flex: 1,
-    paddingVertical: 10,
+    flexDirection: "row",
     alignItems: "center",
-    borderRadius: 10,
+    justifyContent: "center",
+    borderRadius: 18,
+    gap: 6,
   },
   modeBtnActive: {
-    backgroundColor: "#00BFA6",
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
   modeBtnText: {
-    color: "#888",
-    fontSize: 15,
-    fontWeight: "600",
+    fontSize: 14,
   },
   modeBtnTextActive: {
-    color: "#fff",
+    fontWeight: "600",
+    color: Colors.textPrimary,
   },
+  modeBtnTextInactive: {
+    fontWeight: "500",
+    color: Colors.textTertiary,
+  },
+  // Divider
+  divider: {
+    height: 1,
+    backgroundColor: Colors.borderSubtle,
+    marginBottom: 20,
+  },
+  // Start Tour Button
   startBtn: {
-    backgroundColor: "#00BFA6",
-    paddingVertical: 16,
-    borderRadius: 16,
+    flexDirection: "row",
     alignItems: "center",
-    marginTop: 12,
-    marginBottom: 30,
+    justifyContent: "center",
+    backgroundColor: Colors.accent,
+    height: 52,
+    borderRadius: 26,
+    gap: 8,
+    marginTop: 8,
+    marginBottom: 32,
+    shadowColor: Colors.accent,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.19,
+    shadowRadius: 12,
+    elevation: 6,
   },
   startBtnDisabled: {
-    backgroundColor: "rgba(0,191,166,0.3)",
+    opacity: 0.4,
   },
   startBtnText: {
-    color: "#fff",
+    color: "#FFFFFF",
     fontSize: 17,
     fontWeight: "700",
   },

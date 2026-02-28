@@ -1,35 +1,31 @@
 import { Platform } from "react-native";
 
-// AuraMap brand colors
+// AuraMap design tokens — matches auramap_design.pen
 export const Colors = {
-  primary: "#00BFA6", // Deep teal
-  accent: "#FFB74D", // Warm amber
-  background: "#121212",
-  surface: "rgba(20, 20, 20, 0.97)",
-  text: "#FFFFFF",
-  textSecondary: "#999999",
-  textMuted: "#666666",
-  error: "#FF6B6B",
-  success: "#81C784",
-  info: "#4FC3F7",
-  divider: "rgba(255,255,255,0.08)",
+  accent: "#0EA5E9", // Cyan — primary accent per design
+  accentLight: "#E0F2FE", // Light cyan bg
+  accentMuted: "#7DD3FC", // Muted cyan
 
-  light: {
-    text: "#11181C",
-    background: "#fff",
-    tint: "#00BFA6",
-    icon: "#687076",
-    tabIconDefault: "#687076",
-    tabIconSelected: "#00BFA6",
-  },
-  dark: {
-    text: "#ECEDEE",
-    background: "#121212",
-    tint: "#00BFA6",
-    icon: "#9BA1A6",
-    tabIconDefault: "#9BA1A6",
-    tabIconSelected: "#00BFA6",
-  },
+  bgPrimary: "#FFFFFF",
+  bgSurface: "#F4F4F5",
+
+  textPrimary: "#18181B",
+  textSecondary: "#71717A",
+  textTertiary: "#A1A1AA",
+  textDisabled: "#D4D4D8",
+  textInverted: "#FFFFFF",
+
+  borderSubtle: "#E4E4E7",
+  borderStrong: "#D4D4D8",
+
+  error: "#EF4444",
+  success: "#22C55E",
+  warning: "#F59E0B",
+
+  // Map-specific
+  locationBlue: "#4285F4",
+  startGreen: "#22C55E",
+  endRed: "#EF4444",
 };
 
 export const Fonts = Platform.select({

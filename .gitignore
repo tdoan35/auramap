@@ -47,3 +47,4 @@ app-example
 # generated native folders
 /ios
 /android
+backend/venv/

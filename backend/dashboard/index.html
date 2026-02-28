@@ -1,0 +1,1439 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AuraMap — City Intelligence Agent</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+      :root {
+        --bg: #0a0e17;
+        --bg-card: #111827;
+        --bg-card-hover: #1a2332;
+        --border: #1e293b;
+        --text: #e2e8f0;
+        --text-dim: #64748b;
+        --cyan: #0ea5e9;
+        --purple: #a855f7;
+        --green: #22c55e;
+        --amber: #f59e0b;
+        --red: #ef4444;
+        --blue: #3b82f6;
+        --gray: #6b7280;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        height: 100vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Header */
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg-card);
+        flex-shrink: 0;
+      }
+
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .logo {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--cyan);
+        letter-spacing: -0.5px;
+      }
+
+      .logo span {
+        color: var(--text);
+      }
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--green);
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.4;
+        }
+      }
+
+      .status-label {
+        font-size: 12px;
+        color: var(--green);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 600;
+      }
+
+      .stats {
+        display: flex;
+        gap: 32px;
+      }
+
+      .stat {
+        text-align: center;
+      }
+
+      .stat-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--cyan);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .stat-label {
+        font-size: 11px;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 2px;
+      }
+
+      /* Main layout */
+      .main {
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        flex: 1;
+        min-height: 0;
+      }
+
+      /* Feed column */
+      .feed-col {
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+
+      .col-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 20px;
+        font-size: 13px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-dim);
+        border-bottom: 1px solid var(--border);
+        background: var(--bg-card);
+        flex-shrink: 0;
+      }
+
+      .feed {
+        flex: 1;
+        overflow-y: auto;
+        padding: 8px 0;
+      }
+
+      .feed::-webkit-scrollbar {
+        width: 6px;
+      }
+      .feed::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .feed::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 3px;
+      }
+
+      .event {
+        padding: 8px 20px;
+        font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+        font-size: 12.5px;
+        line-height: 1.6;
+        border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+        animation: fadeIn 0.3s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .event-time {
+        color: var(--text-dim);
+        margin-right: 8px;
+      }
+
+      .event-agent {
+        font-weight: 600;
+        margin-right: 6px;
+        padding: 1px 6px;
+        border-radius: 3px;
+        font-size: 11px;
+        text-transform: uppercase;
+      }
+
+      .agent-discovery {
+        color: var(--blue);
+        background: rgba(59, 130, 246, 0.15);
+      }
+      .agent-regenerator {
+        color: var(--purple);
+        background: rgba(168, 85, 247, 0.15);
+      }
+      .agent-evaluator {
+        color: var(--green);
+        background: rgba(34, 197, 94, 0.15);
+      }
+      .agent-system {
+        color: var(--gray);
+        background: rgba(107, 114, 128, 0.15);
+      }
+
+      .event-action {
+        color: var(--text);
+      }
+      .event-poi {
+        color: var(--amber);
+        font-weight: 600;
+      }
+      .event-detail {
+        color: var(--text-dim);
+        font-size: 11.5px;
+      }
+
+      /* Right column */
+      .right-col {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      /* POI grid */
+      .poi-grid-wrap {
+        flex: 1;
+        overflow-y: auto;
+        min-height: 0;
+      }
+
+      .poi-grid-wrap::-webkit-scrollbar {
+        width: 6px;
+      }
+      .poi-grid-wrap::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .poi-grid-wrap::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 3px;
+      }
+
+      .poi-grid {
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .poi-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 12px 14px;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+
+      .poi-card:hover {
+        background: var(--bg-card-hover);
+        border-color: var(--cyan);
+      }
+      .poi-card.active {
+        border-color: var(--cyan);
+        background: var(--bg-card-hover);
+      }
+
+      .poi-name {
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 6px;
+      }
+
+      .poi-meta {
+        display: flex;
+        gap: 12px;
+        font-size: 11px;
+        color: var(--text-dim);
+      }
+
+      .poi-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .score-badge {
+        display: inline-block;
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-weight: 600;
+        font-size: 11px;
+      }
+
+      .score-high {
+        background: rgba(34, 197, 94, 0.2);
+        color: var(--green);
+      }
+      .score-mid {
+        background: rgba(245, 158, 11, 0.2);
+        color: var(--amber);
+      }
+      .score-low {
+        background: rgba(239, 68, 68, 0.2);
+        color: var(--red);
+      }
+
+      /* Detail panel */
+      .detail-panel {
+        border-top: 1px solid var(--border);
+        background: var(--bg-card);
+        max-height: 45%;
+        overflow-y: auto;
+        display: none;
+        flex-shrink: 0;
+      }
+
+      .detail-panel::-webkit-scrollbar {
+        width: 6px;
+      }
+      .detail-panel::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .detail-panel::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 3px;
+      }
+
+      .detail-panel.open {
+        display: block;
+      }
+
+      .detail-content {
+        padding: 16px;
+      }
+
+      .detail-title {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: var(--cyan);
+      }
+
+      .detail-section {
+        margin-bottom: 14px;
+      }
+
+      .detail-label {
+        font-size: 11px;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+      }
+
+      .detail-text {
+        font-size: 13px;
+        line-height: 1.5;
+        color: var(--text);
+      }
+
+      .version-list {
+        list-style: none;
+      }
+
+      .version-item {
+        padding: 8px 0;
+        border-bottom: 1px solid var(--border);
+        font-size: 12px;
+      }
+
+      .version-item:last-child {
+        border-bottom: none;
+      }
+
+      .version-badge {
+        display: inline-block;
+        background: rgba(14, 165, 233, 0.15);
+        color: var(--cyan);
+        padding: 1px 6px;
+        border-radius: 3px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-right: 6px;
+      }
+
+      /* Sponsor banner */
+      .sponsors {
+        padding: 10px 20px;
+        border-top: 1px solid var(--border);
+        background: var(--bg-card);
+        text-align: center;
+        font-size: 11px;
+        color: var(--text-dim);
+        flex-shrink: 0;
+      }
+
+      .sponsors strong {
+        color: var(--text);
+      }
+
+      /* Graph view */
+      .graph-container {
+        flex: 1;
+        min-height: 0;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .graph-container svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      .graph-tooltip {
+        position: absolute;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px 14px;
+        pointer-events: none;
+        font-size: 12px;
+        line-height: 1.5;
+        opacity: 0;
+        transition: opacity 0.15s;
+        z-index: 10;
+        max-width: 220px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      }
+
+      .graph-tooltip.visible {
+        opacity: 1;
+      }
+
+      .graph-tooltip .tt-name {
+        font-weight: 700;
+        font-size: 13px;
+        color: var(--text);
+        margin-bottom: 4px;
+      }
+
+      .graph-tooltip .tt-types {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+        margin-bottom: 6px;
+      }
+
+      .graph-tooltip .tt-type {
+        background: rgba(14, 165, 233, 0.15);
+        color: var(--cyan);
+        padding: 1px 6px;
+        border-radius: 3px;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+
+      .graph-tooltip .tt-score {
+        color: var(--text-dim);
+        font-size: 11px;
+      }
+
+      .view-toggle {
+        display: flex;
+        gap: 2px;
+        background: rgba(30, 41, 59, 0.6);
+        border-radius: 6px;
+        padding: 2px;
+      }
+
+      .view-btn {
+        background: none;
+        border: none;
+        color: var(--text-dim);
+        font-size: 11px;
+        font-weight: 600;
+        padding: 4px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: all 0.15s;
+      }
+
+      .view-btn:hover {
+        color: var(--text);
+      }
+      .view-btn.active {
+        background: var(--cyan);
+        color: #000;
+      }
+
+      /* Tour event badge colors */
+      .agent-tour-status {
+        color: var(--blue);
+        background: rgba(59, 130, 246, 0.15);
+      }
+      .agent-tour-reasoning {
+        color: var(--purple);
+        background: rgba(168, 85, 247, 0.15);
+      }
+      .agent-tour-outline {
+        color: var(--amber);
+        background: rgba(245, 158, 11, 0.15);
+      }
+      .agent-tour-segment {
+        color: var(--green);
+        background: rgba(34, 197, 94, 0.15);
+      }
+      .agent-tour-complete {
+        color: var(--cyan);
+        background: rgba(14, 165, 233, 0.15);
+      }
+
+      /* Empty state */
+      .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 200px;
+        color: var(--text-dim);
+        font-size: 13px;
+      }
+
+      .empty-state-icon {
+        font-size: 32px;
+        margin-bottom: 8px;
+        opacity: 0.5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div class="header-left">
+        <div>
+          <div class="logo">Aura<span>Map</span></div>
+        </div>
+        <div class="status-dot"></div>
+        <div class="status-label">City Intelligence Agent — Live</div>
+      </div>
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-value" id="stat-pois">-</div>
+          <div class="stat-label">POIs Monitored</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="stat-quality">-</div>
+          <div class="stat-label">Avg Quality</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="stat-versions">-</div>
+          <div class="stat-label">Versions</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="stat-cycles">-</div>
+          <div class="stat-label">Cycles</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="feed-col">
+        <div class="col-header">
+          <div class="view-toggle" id="feed-toggle">
+            <button class="view-btn active" data-feed="activity" onclick="switchFeed('activity')">Live Activity</button>
+            <button class="view-btn" data-feed="tour" onclick="switchFeed('tour')">Tour Generation</button>
+          </div>
+        </div>
+        <div class="feed" id="feed">
+          <div class="empty-state">
+            <div class="empty-state-icon">&#x1f50d;</div>
+            <div>Waiting for agent events...</div>
+          </div>
+        </div>
+        <div class="feed" id="tour-feed" style="display:none">
+          <div class="empty-state">
+            <div class="empty-state-icon">&#x1f3b5;</div>
+            <div>Waiting for tour generation events...</div>
+          </div>
+        </div>
+        <div class="sponsors">
+          Powered by <strong>Tavily</strong> (search) &middot;
+          <strong>Neo4j</strong> (knowledge graph) &middot;
+          <strong>Pioneer AI by Fastino</strong> (inference) &middot;
+          <strong>OpenAI</strong> (quality eval)
+        </div>
+      </div>
+
+      <div class="right-col">
+        <div class="col-header">
+          <span>Knowledge Graph — POIs</span>
+          <div class="view-toggle">
+            <button
+              class="view-btn active"
+              data-view="graph"
+              onclick="switchView('graph')"
+            >
+              Graph
+            </button>
+            <button
+              class="view-btn"
+              data-view="list"
+              onclick="switchView('list')"
+            >
+              List
+            </button>
+          </div>
+        </div>
+        <div class="graph-container" id="graph-container">
+          <div class="graph-tooltip" id="graph-tooltip"></div>
+        </div>
+        <div class="poi-grid-wrap" id="poi-grid-wrap" style="display: none">
+          <div class="poi-grid" id="poi-grid">
+            <div class="empty-state">
+              <div class="empty-state-icon">&#x1f5fa;</div>
+              <div>Loading POIs...</div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-panel" id="detail-panel">
+          <div class="detail-content" id="detail-content"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const BASE = window.location.origin;
+      const feedEl = document.getElementById("feed");
+      const poiGridEl = document.getElementById("poi-grid");
+      const detailPanel = document.getElementById("detail-panel");
+      const detailContent = document.getElementById("detail-content");
+      const graphContainer = document.getElementById("graph-container");
+      const graphTooltip = document.getElementById("graph-tooltip");
+      const poiGridWrap = document.getElementById("poi-grid-wrap");
+      const tourFeedEl = document.getElementById("tour-feed");
+      let feedStarted = false;
+      let tourFeedStarted = false;
+      let selectedPoi = null;
+      let autoScroll = true;
+      let tourAutoScroll = true;
+      let currentView = "graph";
+      let currentFeed = "activity";
+      let cachedPois = [];
+      let graphSimulation = null;
+
+      // --- Seed fallback (used when Neo4j is unavailable) ---
+      const SEED_POIS = [
+        {
+          name: "Ferry Building",
+          types: ["landmark", "marketplace", "transit"],
+          quality_score: 0,
+          version: 0,
+        },
+        {
+          name: "Coit Tower",
+          types: ["landmark", "observation", "art"],
+          quality_score: 0,
+          version: 0,
+        },
+        {
+          name: "Golden Gate Bridge",
+          types: ["landmark", "bridge", "engineering"],
+          quality_score: 0,
+          version: 0,
+        },
+        {
+          name: "Chinatown Gate",
+          types: ["landmark", "cultural", "neighborhood"],
+          quality_score: 0,
+          version: 0,
+        },
+        {
+          name: "Fisherman's Wharf",
+          types: ["landmark", "waterfront", "dining"],
+          quality_score: 0,
+          version: 0,
+        },
+        {
+          name: "Palace of Fine Arts",
+          types: ["landmark", "architecture", "park"],
+          quality_score: 0,
+          version: 0,
+        },
+        {
+          name: "Lombard Street",
+          types: ["landmark", "street", "scenic"],
+          quality_score: 0,
+          version: 0,
+        },
+        {
+          name: "Alcatraz Island",
+          types: ["landmark", "historic", "museum"],
+          quality_score: 0,
+          version: 0,
+        },
+        {
+          name: "Painted Ladies",
+          types: ["landmark", "architecture", "residential"],
+          quality_score: 0,
+          version: 0,
+        },
+        {
+          name: "Twin Peaks",
+          types: ["landmark", "nature", "viewpoint"],
+          quality_score: 0,
+          version: 0,
+        },
+      ];
+
+      // --- View Toggle (right column: Graph/List) ---
+      function switchView(view) {
+        currentView = view;
+        document
+          .querySelectorAll(".right-col .view-btn")
+          .forEach((b) =>
+            b.classList.toggle("active", b.dataset.view === view),
+          );
+        graphContainer.style.display = view === "graph" ? "" : "none";
+        poiGridWrap.style.display = view === "list" ? "" : "none";
+      }
+
+      // --- Feed Tab Toggle (left column: Live Activity / Tour Generation) ---
+      function switchFeed(feed) {
+        currentFeed = feed;
+        document
+          .querySelectorAll("#feed-toggle .view-btn")
+          .forEach((b) =>
+            b.classList.toggle("active", b.dataset.feed === feed),
+          );
+        feedEl.style.display = feed === "activity" ? "" : "none";
+        tourFeedEl.style.display = feed === "tour" ? "" : "none";
+      }
+
+      // --- SSE Tour Feed ---
+      function connectTourFeed() {
+        const es = new EventSource(`${BASE}/agent/tour-feed`);
+
+        es.addEventListener("tour_event", (e) => {
+          const event = JSON.parse(e.data);
+          appendTourEvent(event);
+        });
+
+        es.addEventListener("ping", () => {});
+
+        es.onerror = () => {
+          es.close();
+          setTimeout(connectTourFeed, 3000);
+        };
+      }
+
+      function appendTourEvent(ev) {
+        if (!tourFeedStarted) {
+          tourFeedEl.innerHTML = "";
+          tourFeedStarted = true;
+        }
+
+        const div = document.createElement("div");
+        div.className = "event";
+
+        const time = new Date(ev.timestamp * 1000);
+        const ts = time.toLocaleTimeString("en-US", {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+
+        const eventType = ev.event_type || "status";
+        const badgeClass = `agent-tour-${eventType}`;
+        const data = ev.data || {};
+
+        let content = "";
+        switch (eventType) {
+          case "status":
+            content = `<span class="event-action">${data.message || data.phase || "..."}</span>`;
+            break;
+          case "reasoning":
+            const agent = data.agent || "agent";
+            content = `<span class="event-action">${data.message || "thinking..."}</span>`;
+            if (data.score !== undefined) {
+              const scoreClass = data.score >= 8 ? "score-high" : data.score >= 6 ? "score-mid" : "score-low";
+              content += ` <span class="score-badge ${scoreClass}">${data.score}/10</span>`;
+            }
+            break;
+          case "outline":
+            const theme = data.theme || "Tour";
+            const segCount = (data.segments || []).length;
+            content = `<span class="event-action">Tour: ${theme}</span> <span class="event-detail">${segCount} segments planned</span>`;
+            break;
+          case "segment":
+            const label = data.label || data.segment_id || "segment";
+            const dur = data.duration_s ? ` (${data.duration_s}s)` : "";
+            content = `<span class="event-poi">${label}</span> <span class="event-action">ready</span><span class="event-detail">${dur}</span>`;
+            break;
+          case "complete":
+            const total = data.total_segments || "?";
+            const totalDur = data.total_duration_s ? `${data.total_duration_s}s total` : "";
+            content = `<span class="event-action">${total} segments</span> <span class="event-detail">${totalDur}</span>`;
+            break;
+          default:
+            content = `<span class="event-action">${JSON.stringify(data).slice(0, 100)}</span>`;
+        }
+
+        div.innerHTML = `<span class="event-time">${ts}</span><span class="event-agent ${badgeClass}">${eventType}</span> ${content}`;
+
+        tourFeedEl.appendChild(div);
+
+        while (tourFeedEl.children.length > 300) {
+          tourFeedEl.removeChild(tourFeedEl.firstChild);
+        }
+
+        if (tourAutoScroll) {
+          tourFeedEl.scrollTop = tourFeedEl.scrollHeight;
+        }
+      }
+
+      // Auto-scroll detection for tour feed
+      tourFeedEl.addEventListener("scroll", () => {
+        const threshold = 100;
+        tourAutoScroll =
+          tourFeedEl.scrollHeight - tourFeedEl.scrollTop - tourFeedEl.clientHeight <
+          threshold;
+      });
+
+      // --- SSE Feed ---
+      function connectFeed() {
+        const es = new EventSource(`${BASE}/agent/feed`);
+
+        es.addEventListener("agent_event", (e) => {
+          const event = JSON.parse(e.data);
+          appendEvent(event);
+        });
+
+        es.addEventListener("ping", () => {});
+
+        es.onerror = () => {
+          es.close();
+          setTimeout(connectFeed, 3000);
+        };
+      }
+
+      let graphRefreshTimer = null;
+      function appendEvent(ev) {
+        if (!feedStarted) {
+          feedEl.innerHTML = "";
+          feedStarted = true;
+        }
+
+        const div = document.createElement("div");
+        div.className = "event";
+
+        const time = new Date(ev.timestamp * 1000);
+        const ts = time.toLocaleTimeString("en-US", {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+
+        const agentClass = `agent-${ev.agent}`;
+        let details = "";
+        if (ev.details) {
+          const parts = [];
+          for (const [k, v] of Object.entries(ev.details)) {
+            if (k === "traceback") continue;
+            const val =
+              typeof v === "string" && v.length > 80
+                ? v.slice(0, 80) + "..."
+                : v;
+            parts.push(`${k}=${JSON.stringify(val)}`);
+          }
+          if (parts.length)
+            details = ` <span class="event-detail">${parts.join(" ")}</span>`;
+        }
+
+        const poiSpan = ev.poi_name
+          ? ` <span class="event-poi">${ev.poi_name}</span>`
+          : "";
+
+        div.innerHTML = `<span class="event-time">${ts}</span><span class="event-agent ${agentClass}">${ev.agent}</span> <span class="event-action">${ev.action}</span>${poiSpan}${details}`;
+
+        feedEl.appendChild(div);
+
+        while (feedEl.children.length > 300) {
+          feedEl.removeChild(feedEl.firstChild);
+        }
+
+        if (autoScroll) {
+          feedEl.scrollTop = feedEl.scrollHeight;
+        }
+
+        // Debounced graph refresh on relevant events
+        if (
+          ev.action === "knowledge_updated" ||
+          ev.action === "poi_seeded" ||
+          ev.action === "seed_complete"
+        ) {
+          clearTimeout(graphRefreshTimer);
+          graphRefreshTimer = setTimeout(() => fetchPois(), 1500);
+        }
+      }
+
+      // Auto-scroll detection
+      feedEl.addEventListener("scroll", () => {
+        const threshold = 100;
+        autoScroll =
+          feedEl.scrollHeight - feedEl.scrollTop - feedEl.clientHeight <
+          threshold;
+      });
+
+      // --- Stats ---
+      async function fetchStats() {
+        try {
+          const res = await fetch(`${BASE}/agent/stats`);
+          const s = await res.json();
+          document.getElementById("stat-pois").textContent = s.poi_count ?? "-";
+          document.getElementById("stat-quality").textContent =
+            s.avg_quality_score ?? "-";
+          document.getElementById("stat-versions").textContent =
+            s.total_versions ?? "-";
+          document.getElementById("stat-cycles").textContent =
+            s.cycles_completed ?? "-";
+        } catch (e) {
+          console.error("Stats fetch failed:", e);
+        }
+      }
+
+      // --- POI Grid ---
+      async function fetchPois() {
+        try {
+          const res = await fetch(`${BASE}/agent/pois`);
+          const pois = await res.json();
+          cachedPois = pois.length ? pois : SEED_POIS;
+        } catch (e) {
+          console.error("POI fetch failed, using seed fallback:", e);
+          cachedPois = SEED_POIS;
+        }
+        renderPoiGrid(cachedPois);
+        renderGraph(cachedPois);
+      }
+
+      function renderPoiGrid(pois) {
+        if (!pois.length) {
+          poiGridEl.innerHTML =
+            '<div class="empty-state"><div>No POIs yet</div></div>';
+          return;
+        }
+
+        poiGridEl.innerHTML = pois
+          .map((p) => {
+            const score = p.quality_score || 0;
+            const scoreClass =
+              score >= 8
+                ? "score-high"
+                : score >= 6
+                  ? "score-mid"
+                  : "score-low";
+            const updated = p.updated_at ? timeAgo(p.updated_at) : "never";
+            const isActive = selectedPoi === p.name ? "active" : "";
+
+            return `<div class="poi-card ${isActive}" onclick="selectPoi('${p.name.replace(/'/g, "\\'")}')">
+      <div class="poi-name">${p.name}</div>
+      <div class="poi-meta">
+        <span class="poi-meta-item"><span class="score-badge ${scoreClass}">${score}/10</span></span>
+        <span class="poi-meta-item">v${p.version || 1}</span>
+        <span class="poi-meta-item">${updated}</span>
+      </div>
+    </div>`;
+          })
+          .join("");
+      }
+
+      function timeAgo(epoch) {
+        const diff = Math.floor(Date.now() / 1000 - epoch);
+        if (diff < 60) return `${diff}s ago`;
+        if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+        if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+        return `${Math.floor(diff / 86400)}d ago`;
+      }
+
+      // --- Knowledge Graph (D3 Force-Directed) ---
+      function nodeColor(d) {
+        if (d.group === "hub") return "#0ea5e9";
+        if (d.group === "category") return "#f472b6"; // pink for categories
+        if (d.group === "version") return "#a855f7";
+        const s = d.score || 0;
+        if (s === 0) return "#6b7280"; // unscored — gray
+        if (s < 6) return "#ef4444"; // low — red
+        if (s < 8) return "#f59e0b"; // mid — amber
+        return "#22c55e"; // high — green
+      }
+
+      function buildGraphData(pois) {
+        const nodes = [];
+        const links = [];
+
+        // Hub node
+        nodes.push({
+          id: "hub",
+          label: "San Francisco",
+          group: "hub",
+          score: 0,
+          radius: 22,
+        });
+
+        // Collect unique types across all POIs (filter out "landmark" — too common)
+        const typeSet = new Set();
+        pois.forEach((p) => {
+          (p.types || []).forEach((t) => {
+            if (t !== "landmark") typeSet.add(t);
+          });
+        });
+
+        // Create category nodes & link hub → category
+        const categoryPoiCounts = {};
+        typeSet.forEach((type) => {
+          const catId = `cat-${type}`;
+          categoryPoiCounts[type] = 0;
+          nodes.push({
+            id: catId,
+            label: type.charAt(0).toUpperCase() + type.slice(1),
+            group: "category",
+            score: 0,
+            radius: 12,
+            categoryType: type,
+          });
+          links.push({ source: "hub", target: catId, linkType: "hub-category" });
+        });
+
+        // POI nodes — link to category nodes (not hub)
+        pois.forEach((p) => {
+          const score = p.quality_score || 0;
+          const poiId = `poi-${p.name}`;
+          const radius = 8 + (score / 10) * 10; // 8-18px based on score
+          nodes.push({
+            id: poiId,
+            label: p.name,
+            group: "poi",
+            score: score,
+            version: p.version || 0,
+            types: p.types || [],
+            radius: radius,
+          });
+
+          // Link POI to each of its category nodes (excluding "landmark")
+          const poiTypes = (p.types || []).filter((t) => t !== "landmark");
+          poiTypes.forEach((t) => {
+            links.push({ source: `cat-${t}`, target: poiId, linkType: "category-poi" });
+            categoryPoiCounts[t] = (categoryPoiCounts[t] || 0) + 1;
+          });
+
+          // Fallback: if POI has no non-landmark types, link directly to hub
+          if (poiTypes.length === 0) {
+            links.push({ source: "hub", target: poiId, linkType: "hub-category" });
+          }
+
+          // Version satellite nodes (if versions exist)
+          const versions = p.versions || [];
+          versions.forEach((v) => {
+            const vId = `${poiId}-v${v.version || 0}`;
+            nodes.push({
+              id: vId,
+              label: `v${v.version || "?"}`,
+              group: "version",
+              score: v.quality_score || 0,
+              radius: 5,
+            });
+            links.push({ source: poiId, target: vId, linkType: "poi-version" });
+          });
+        });
+
+        // Store POI counts on category nodes for tooltip
+        nodes.forEach((n) => {
+          if (n.group === "category") {
+            n.poiCount = categoryPoiCounts[n.categoryType] || 0;
+          }
+        });
+
+        return { nodes, links };
+      }
+
+      function renderGraph(pois) {
+        const container = graphContainer;
+        const rect = container.getBoundingClientRect();
+        const width = rect.width || 400;
+        const height = rect.height || 400;
+        const cx = width / 2;
+        const cy = height / 2;
+
+        // Remove old SVG
+        d3.select(container).select("svg").remove();
+
+        const { nodes, links } = buildGraphData(pois);
+
+        const svg = d3
+          .select(container)
+          .append("svg")
+          .attr("width", width)
+          .attr("height", height);
+
+        // Glow filter
+        const defs = svg.append("defs");
+        const filter = defs.append("filter").attr("id", "glow");
+        filter
+          .append("feGaussianBlur")
+          .attr("stdDeviation", "4")
+          .attr("result", "blur");
+        const merge = filter.append("feMerge");
+        merge.append("feMergeNode").attr("in", "blur");
+        merge.append("feMergeNode").attr("in", "SourceGraphic");
+
+        // Links — differentiated by type
+        const link = svg
+          .append("g")
+          .selectAll("line")
+          .data(links)
+          .join("line")
+          .attr("stroke", "#1e293b")
+          .attr("stroke-width", (d) => {
+            if (d.linkType === "hub-category") return 1.5;
+            if (d.linkType === "category-poi") return 1;
+            return 0.8; // poi-version
+          })
+          .attr("stroke-opacity", 0.6)
+          .attr("stroke-dasharray", (d) =>
+            d.linkType === "poi-version" ? "3,3" : null,
+          );
+
+        // Nodes
+        const node = svg
+          .append("g")
+          .selectAll("circle")
+          .data(nodes)
+          .join("circle")
+          .attr("r", (d) => d.radius)
+          .attr("fill", (d) => nodeColor(d))
+          .attr("stroke", (d) => (d.group === "hub" ? "#0ea5e9" : "none"))
+          .attr("stroke-width", (d) => (d.group === "hub" ? 2 : 0))
+          .attr("fill-opacity", (d) =>
+            d.group === "version" ? 0.7 : d.group === "category" ? 0.85 : 0.9,
+          )
+          .attr("cursor", (d) =>
+            d.group === "poi" || d.group === "category" ? "pointer" : "default",
+          )
+          .attr("filter", (d) =>
+            selectedPoi === d.label ? "url(#glow)" : null,
+          );
+
+        // Labels for hub, category, and POI nodes
+        const label = svg
+          .append("g")
+          .selectAll("text")
+          .data(
+            nodes.filter(
+              (n) =>
+                n.group === "poi" ||
+                n.group === "hub" ||
+                n.group === "category",
+            ),
+          )
+          .join("text")
+          .text((d) => {
+            if (d.group === "hub") return d.label;
+            if (d.group === "category") return d.label;
+            return d.label.length > 14
+              ? d.label.slice(0, 12) + ".."
+              : d.label;
+          })
+          .attr("font-size", (d) =>
+            d.group === "hub" ? 11 : d.group === "category" ? 10 : 9,
+          )
+          .attr("font-weight", (d) => (d.group === "hub" ? 700 : 600))
+          .attr("fill", (d) =>
+            d.group === "category" ? "#94a3b8" : "#e2e8f0",
+          )
+          .attr("text-anchor", "middle")
+          .attr("dy", (d) => d.radius + 14)
+          .attr("pointer-events", "none")
+          .attr("font-family", "Inter, -apple-system, sans-serif");
+
+        // Force simulation — 4-tier layout: hub → categories → POIs → versions
+        graphSimulation = d3
+          .forceSimulation(nodes)
+          .force(
+            "link",
+            d3
+              .forceLink(links)
+              .id((d) => d.id)
+              .distance((d) => {
+                if (d.linkType === "hub-category") return 80;
+                if (d.linkType === "category-poi") return 90;
+                return 45; // poi-version
+              })
+              .strength(0.8),
+          )
+          .force(
+            "charge",
+            d3
+              .forceManyBody()
+              .strength((d) => {
+                if (d.group === "hub") return -300;
+                if (d.group === "category") return -60;
+                if (d.group === "poi") return -80;
+                return -30; // version
+              }),
+          )
+          .force("center", d3.forceCenter(cx, cy))
+          .force(
+            "radial",
+            d3
+              .forceRadial(
+                (d) => {
+                  if (d.group === "hub") return 0;
+                  if (d.group === "category") return 90;
+                  if (d.group === "poi") return 180;
+                  return 240; // version
+                },
+                cx,
+                cy,
+              )
+              .strength((d) => (d.group === "hub" ? 1 : 0.5)),
+          )
+          .force(
+            "collide",
+            d3.forceCollide((d) => d.radius + 8),
+          )
+          .alpha(0.8)
+          .alphaDecay(0.015);
+
+        graphSimulation.on("tick", () => {
+          link
+            .attr("x1", (d) => d.source.x)
+            .attr("y1", (d) => d.source.y)
+            .attr("x2", (d) => d.target.x)
+            .attr("y2", (d) => d.target.y);
+
+          node
+            .attr(
+              "cx",
+              (d) =>
+                (d.x = Math.max(d.radius, Math.min(width - d.radius, d.x))),
+            )
+            .attr(
+              "cy",
+              (d) =>
+                (d.y = Math.max(d.radius, Math.min(height - d.radius, d.y))),
+            );
+
+          label.attr("x", (d) => d.x).attr("y", (d) => d.y);
+        });
+
+        // Drag for POI nodes
+        const drag = d3
+          .drag()
+          .on("start", (event, d) => {
+            if (!event.active) graphSimulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+          })
+          .on("drag", (event, d) => {
+            d.fx = event.x;
+            d.fy = event.y;
+          })
+          .on("end", (event, d) => {
+            if (!event.active) graphSimulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+          });
+
+        node
+          .filter((d) => d.group === "poi" || d.group === "category")
+          .call(drag);
+
+        // Hover tooltip
+        node
+          .filter((d) => d.group === "poi")
+          .on("mouseenter", (event, d) => {
+            const typeBadges = (d.types || [])
+              .map((t) => `<span class="tt-type">${t}</span>`)
+              .join("");
+            const scoreText =
+              d.score > 0
+                ? `Quality: <strong>${d.score}/10</strong>`
+                : "Not yet scored";
+            graphTooltip.innerHTML = `
+        <div class="tt-name">${d.label}</div>
+        <div class="tt-types">${typeBadges}</div>
+        <div class="tt-score">${scoreText}</div>
+      `;
+            graphTooltip.classList.add("visible");
+          })
+          .on("mousemove", (event) => {
+            const containerRect = container.getBoundingClientRect();
+            graphTooltip.style.left =
+              event.clientX - containerRect.left + 14 + "px";
+            graphTooltip.style.top =
+              event.clientY - containerRect.top - 10 + "px";
+          })
+          .on("mouseleave", () => {
+            graphTooltip.classList.remove("visible");
+          });
+
+        // Hover tooltip for category nodes
+        node
+          .filter((d) => d.group === "category")
+          .on("mouseenter", (event, d) => {
+            graphTooltip.innerHTML = `
+        <div class="tt-name">${d.label}</div>
+        <div class="tt-score">${d.poiCount} connected POI${d.poiCount !== 1 ? "s" : ""}</div>
+      `;
+            graphTooltip.classList.add("visible");
+          })
+          .on("mousemove", (event) => {
+            const containerRect = container.getBoundingClientRect();
+            graphTooltip.style.left =
+              event.clientX - containerRect.left + 14 + "px";
+            graphTooltip.style.top =
+              event.clientY - containerRect.top - 10 + "px";
+          })
+          .on("mouseleave", () => {
+            graphTooltip.classList.remove("visible");
+          });
+
+        // Click to select
+        node
+          .filter((d) => d.group === "poi")
+          .on("click", (event, d) => {
+            selectPoi(d.label);
+          });
+      }
+
+      // --- POI Detail ---
+      async function selectPoi(name) {
+        selectedPoi = name;
+        renderPoiGrid(cachedPois);
+
+        // Update glow on graph nodes
+        d3.select(graphContainer)
+          .selectAll("circle")
+          .attr("filter", (d) =>
+            selectedPoi === d.label ? "url(#glow)" : null,
+          )
+          .attr("stroke", (d) => {
+            if (d.group === "hub") return "#0ea5e9";
+            if (d.group === "poi" && selectedPoi === d.label) return "#0ea5e9";
+            return "none";
+          })
+          .attr("stroke-width", (d) => {
+            if (d.group === "hub") return 2;
+            if (d.group === "poi" && selectedPoi === d.label) return 2;
+            return 0;
+          });
+
+        try {
+          const res = await fetch(
+            `${BASE}/agent/pois/${encodeURIComponent(name)}`,
+          );
+          const poi = await res.json();
+          renderDetail(poi);
+        } catch (e) {
+          console.error("POI detail fetch failed:", e);
+        }
+      }
+
+      function renderDetail(poi) {
+        if (poi.error) {
+          detailPanel.classList.remove("open");
+          return;
+        }
+
+        detailPanel.classList.add("open");
+
+        const versions = (poi.versions || []).sort(
+          (a, b) => (b.version || 0) - (a.version || 0),
+        );
+        const versionHtml = versions.length
+          ? `<ul class="version-list">${versions
+              .map(
+                (v) => `
+        <li class="version-item">
+          <span class="version-badge">v${v.version || "?"}</span>
+          <span class="score-badge ${(v.quality_score || 0) >= 8 ? "score-high" : (v.quality_score || 0) >= 6 ? "score-mid" : "score-low"}">${v.quality_score || 0}/10</span>
+          <span class="event-detail">${v.archived_at ? new Date(v.archived_at).toLocaleTimeString() : ""}</span>
+          <div class="detail-text" style="margin-top:4px;font-size:12px;color:var(--text-dim)">${(v.narrative || v.description || "").slice(0, 200)}${(v.narrative || v.description || "").length > 200 ? "..." : ""}</div>
+        </li>
+      `,
+              )
+              .join("")}</ul>`
+          : '<div class="event-detail">No previous versions yet</div>';
+
+        detailContent.innerHTML = `
+    <div class="detail-title">${poi.name}</div>
+    <div class="detail-section">
+      <div class="detail-label">Current Narrative (v${poi.version || 1})</div>
+      <div class="detail-text">${poi.narrative || poi.description || "No narrative generated yet"}</div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-label">Quality Score</div>
+      <div class="detail-text"><span class="score-badge ${(poi.quality_score || 0) >= 8 ? "score-high" : (poi.quality_score || 0) >= 6 ? "score-mid" : "score-low"}">${poi.quality_score || 0}/10</span></div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-label">Version History</div>
+      ${versionHtml}
+    </div>
+  `;
+      }
+
+      // --- Init ---
+      connectFeed();
+      connectTourFeed();
+      fetchStats();
+      fetchPois();
+
+      // Poll stats and POIs periodically
+      setInterval(fetchStats, 10000);
+      setInterval(fetchPois, 15000);
+    </script>
+  </body>
+</html>

@@ -1,8 +1,9 @@
-import { TourGenerateRequest, SSEStatusEvent, SSESegmentEvent, SSECompleteEvent, SSEReasoningEvent } from "@/types";
+import { TourGenerateRequest, SSEStatusEvent, SSESegmentEvent, SSECompleteEvent, SSEReasoningEvent, SSEOutlineEvent } from "@/types";
 import { API_BASE_URL } from "@/utils/constants";
 
 interface SSECallbacks {
   onStatus: (data: SSEStatusEvent) => void;
+  onOutline?: (data: SSEOutlineEvent) => void;
   onSegment: (data: SSESegmentEvent) => void;
   onComplete: (data: SSECompleteEvent) => void;
   onReasoning?: (data: SSEReasoningEvent) => void;
@@ -11,87 +12,80 @@ interface SSECallbacks {
 
 /**
  * Connect to the tour generation SSE stream via POST request.
- * React Native doesn't support native EventSource, so we use fetch + manual line parsing.
+ * Uses XMLHttpRequest for reliable streaming in React Native (fetch doesn't support ReadableStream).
  * Returns a close function to abort the connection.
  */
 export function connectToTourStream(
   request: TourGenerateRequest,
   callbacks: SSECallbacks
 ): { close: () => void } {
-  const controller = new AbortController();
+  const xhr = new XMLHttpRequest();
+  let lastIndex = 0;
+  let currentEvent = "";
 
-  (async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/tour/generate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
-        body: JSON.stringify(request),
-        signal: controller.signal,
-      });
+  xhr.open("POST", `${API_BASE_URL}/tour/generate`);
+  xhr.setRequestHeader("Content-Type", "application/json");
+  xhr.setRequestHeader("Accept", "text/event-stream");
+  xhr.setRequestHeader("Bypass-Tunnel-Reminder", "true");
 
-      if (!response.ok) {
-        callbacks.onError(`HTTP ${response.status}: ${response.statusText}`);
-        return;
-      }
+  xhr.onprogress = () => {
+    const newData = xhr.responseText.substring(lastIndex);
+    lastIndex = xhr.responseText.length;
 
-      const reader = response.body?.getReader();
-      if (!reader) {
-        callbacks.onError("No response body reader available");
-        return;
-      }
+    const lines = newData.split("\n");
+    for (const line of lines) {
+      const trimmed = line.trim();
 
-      const decoder = new TextDecoder();
-      let buffer = "";
-      let currentEvent = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-
-        // Process complete lines
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || ""; // Keep incomplete last line in buffer
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-
-          if (trimmed.startsWith("event:")) {
-            currentEvent = trimmed.slice(6).trim();
-          } else if (trimmed.startsWith("data:")) {
-            const dataStr = trimmed.slice(5).trim();
-            try {
-              const data = JSON.parse(dataStr);
-              switch (currentEvent) {
-                case "status":
-                  callbacks.onStatus(data);
-                  break;
-                case "segment":
-                  callbacks.onSegment(data);
-                  break;
-                case "complete":
-                  callbacks.onComplete(data);
-                  break;
-                case "reasoning":
-                  callbacks.onReasoning?.(data);
-                  break;
-              }
-            } catch (e) {
-              // Skip non-JSON data lines
-            }
-            currentEvent = "";
+      if (trimmed.startsWith("event:")) {
+        currentEvent = trimmed.slice(6).trim();
+      } else if (trimmed.startsWith("data:")) {
+        const dataStr = trimmed.slice(5).trim();
+        try {
+          const data = JSON.parse(dataStr);
+          switch (currentEvent) {
+            case "status":
+              callbacks.onStatus(data);
+              break;
+            case "outline":
+              callbacks.onOutline?.(data);
+              break;
+            case "segment":
+              callbacks.onSegment(data);
+              break;
+            case "complete":
+              callbacks.onComplete(data);
+              break;
+            case "reasoning":
+              callbacks.onReasoning?.(data);
+              break;
           }
+        } catch (e) {
+          // Skip non-JSON data lines
         }
-      }
-    } catch (err: any) {
-      if (err.name !== "AbortError") {
-        callbacks.onError(err.message || "SSE connection failed");
+        currentEvent = "";
       }
     }
-  })();
+  };
+
+  xhr.onerror = () => {
+    callbacks.onError("SSE connection failed");
+  };
+
+  xhr.ontimeout = () => {
+    callbacks.onError("SSE connection timed out");
+  };
+
+  xhr.onreadystatechange = () => {
+    if (xhr.readyState === XMLHttpRequest.DONE) {
+      if (xhr.status !== 200 && xhr.status !== 0) {
+        callbacks.onError(`HTTP ${xhr.status}: ${xhr.statusText}`);
+      }
+    }
+  };
+
+  xhr.send(JSON.stringify(request));
 
   return {
-    close: () => controller.abort(),
+    close: () => xhr.abort(),
   };
 }

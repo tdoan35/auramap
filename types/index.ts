@@ -39,6 +39,7 @@ export interface Segment {
 }
 
 export type AppPhase =
+  | "WELCOME"
   | "ROUTE_SETUP"
   | "ROUTE_CUSTOMIZATION"
   | "TOUR_LOADING"
@@ -65,6 +66,18 @@ export interface SSESegmentEvent {
   duration_s: number;
 }
 
+export interface SSEOutlineSegment {
+  segment_id: number;
+  type: string;
+  label: string;
+  estimated_duration_s: number;
+}
+
+export interface SSEOutlineEvent {
+  theme: string;
+  segments: SSEOutlineSegment[];
+}
+
 export interface SSECompleteEvent {
   tour_id: string;
   total_segments: number;
@@ -78,6 +91,8 @@ export interface SSEReasoningEvent {
   score?: number;
   approved?: boolean;
 }
+
+export type PTTStatus = "idle" | "connecting" | "listening" | "processing" | "responding" | "error";
 
 export interface TourGenerateRequest {
   route: {

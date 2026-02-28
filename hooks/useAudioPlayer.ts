@@ -2,7 +2,7 @@ import { useRef, useCallback, useEffect } from "react";
 import { Audio, AVPlaybackStatusSuccess } from "expo-av";
 import { usePlaybackStore } from "@/stores/usePlaybackStore";
 import { useTourStore } from "@/stores/useTourStore";
-import { SEGMENT_GAP_MS } from "@/utils/constants";
+import { SEGMENT_GAP_MS, API_BASE_URL } from "@/utils/constants";
 
 export function useAudioPlayer() {
   const soundRef = useRef<Audio.Sound | null>(null);
@@ -50,8 +50,11 @@ export function useAudioPlayer() {
       await unloadSound();
 
       try {
+        const audioUri = segment.audioUrl.startsWith("http")
+          ? segment.audioUrl
+          : `${API_BASE_URL}${segment.audioUrl}`;
         const { sound } = await Audio.Sound.createAsync(
-          { uri: segment.audioUrl },
+          { uri: audioUri },
           { shouldPlay: true, progressUpdateIntervalMillis: 33 },
           (status) => {
             if (!status.isLoaded) return;
@@ -127,9 +130,34 @@ export function useAudioPlayer() {
     }
   }, [currentSegmentId, segments, loadAndPlaySegment, updateSegmentStatus]);
 
+  const stopPlayback = useCallback(async () => {
+    if (gapTimerRef.current) {
+      clearTimeout(gapTimerRef.current);
+      gapTimerRef.current = null;
+    }
+    await unloadSound();
+  }, [unloadSound]);
+
+  const pauseTourAudio = useCallback(async () => {
+    if (soundRef.current) {
+      await soundRef.current.pauseAsync();
+      pause();
+    }
+  }, [pause]);
+
+  const resumeTourAudio = useCallback(async () => {
+    if (soundRef.current) {
+      await soundRef.current.playAsync();
+      play();
+    }
+  }, [play]);
+
   return {
     handlePlayPause,
     handleSkipNext,
     loadAndPlaySegment,
+    stopPlayback,
+    pauseTourAudio,
+    resumeTourAudio,
   };
 }

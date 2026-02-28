@@ -11,7 +11,7 @@ interface AppStore {
 }
 
 export const useAppStore = create<AppStore>((set) => ({
-  phase: "ROUTE_SETUP",
+  phase: "WELCOME",
   routeMode: "scenic",
 
   setPhase: (phase) => set({ phase }),

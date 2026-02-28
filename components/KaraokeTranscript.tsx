@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useMemo } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { Colors } from "@/constants/theme";
 import { KaraokeWord } from "@/types";
 import { estimateWordTimings, getActiveWordIndex } from "@/utils/karaokeSync";
 
@@ -91,17 +92,17 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   word: {
-    fontSize: 17,
-    lineHeight: 28,
-    color: "rgba(255,255,255,0.3)",
+    fontSize: 16,
+    lineHeight: 29,
+    color: Colors.textDisabled,
   },
   pastWord: {
-    color: "rgba(255,255,255,0.6)",
+    color: Colors.textPrimary,
   },
   activeWord: {
-    color: "#fff",
+    color: Colors.accent,
     fontWeight: "700",
-    backgroundColor: "rgba(0,191,166,0.25)",
+    backgroundColor: Colors.accentLight,
     borderRadius: 4,
     overflow: "hidden",
   },

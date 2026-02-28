@@ -1,72 +1,115 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouteStore } from "@/stores/useRouteStore";
+import { Colors } from "@/constants/theme";
 import { POI_SELECTION_LIMIT } from "@/utils/constants";
+
+function formatPOIType(types: string[]): string {
+  if (!types || types.length === 0) return "Point of interest";
+  const typeMap: Record<string, string> = {
+    tourist_attraction: "Tourist attraction",
+    museum: "Museum",
+    park: "Park",
+    church: "Place of worship",
+    restaurant: "Restaurant",
+    point_of_interest: "Point of interest",
+    establishment: "Establishment",
+    art_gallery: "Art gallery",
+    landmark: "Historic landmark",
+    natural_feature: "Natural feature",
+    cafe: "Cafe",
+    bar: "Bar",
+    store: "Store",
+    library: "Library",
+  };
+  for (const t of types) {
+    if (typeMap[t]) return typeMap[t];
+  }
+  const first = types.find(
+    (t) => !["point_of_interest", "establishment", "geocode"].includes(t)
+  );
+  if (first) {
+    return first
+      .split("_")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+  }
+  return "Point of interest";
+}
 
 export default function StopEditor() {
   const discoveredPOIs = useRouteStore((s) => s.discoveredPOIs);
   const selectedPOIIds = useRouteStore((s) => s.selectedPOIIds);
-  const stops = useRouteStore((s) => s.stops);
   const togglePOI = useRouteStore((s) => s.togglePOI);
-  const removeStop = useRouteStore((s) => s.removeStop);
 
-  const unselectedPOIs = discoveredPOIs.filter(
-    (p) => !selectedPOIIds.includes(p.place_id)
-  );
+  const atLimit = selectedPOIIds.length >= POI_SELECTION_LIMIT;
 
   return (
     <View style={styles.container}>
-      {/* Selected stops */}
-      {stops.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            Your Stops ({stops.length}/{POI_SELECTION_LIMIT})
-          </Text>
-          {stops.map((poi, index) => (
-            <View key={poi.place_id} style={styles.stopRow}>
-              <View style={styles.stopIndex}>
-                <Text style={styles.stopIndexText}>{index + 1}</Text>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.title}>Stops</Text>
+        <Text style={styles.counter}>
+          {selectedPOIIds.length}/{POI_SELECTION_LIMIT}
+        </Text>
+      </View>
+
+      {/* All discovered POIs */}
+      {discoveredPOIs.map((poi) => {
+        const selectedIndex = selectedPOIIds.indexOf(poi.place_id);
+        const isSelected = selectedIndex !== -1;
+
+        return (
+          <TouchableOpacity
+            key={poi.place_id}
+            style={[styles.row, isSelected && styles.rowSelected]}
+            onPress={() => {
+              if (isSelected || !atLimit) togglePOI(poi.place_id);
+            }}
+            disabled={!isSelected && atLimit}
+            activeOpacity={0.7}
+          >
+            {/* Left: number badge or add icon */}
+            {isSelected ? (
+              <View style={styles.stopNum}>
+                <Text style={styles.stopNumText}>{selectedIndex + 1}</Text>
               </View>
-              <Text style={styles.stopName} numberOfLines={1}>
+            ) : (
+              <View style={[styles.addCircle, atLimit && styles.addCircleDisabled]}>
+                <Ionicons
+                  name="add"
+                  size={16}
+                  color={atLimit ? Colors.textDisabled : Colors.accent}
+                />
+              </View>
+            )}
+
+            {/* Middle: name + type */}
+            <View style={styles.info}>
+              <Text
+                style={[styles.name, !isSelected && atLimit && styles.nameDisabled]}
+                numberOfLines={1}
+              >
                 {poi.name}
               </Text>
-              <TouchableOpacity
-                style={styles.removeBtn}
-                onPress={() => removeStop(poi.place_id)}
-              >
-                <Text style={styles.removeBtnText}>-</Text>
-              </TouchableOpacity>
+              <Text style={styles.desc} numberOfLines={1}>
+                {formatPOIType(poi.types)}
+                {poi.rating != null ? ` \u00B7 \u2605 ${poi.rating.toFixed(1)}` : ""}
+              </Text>
             </View>
-          ))}
-        </View>
-      )}
 
-      {/* Available POIs */}
-      {unselectedPOIs.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Nearby Attractions</Text>
-          {unselectedPOIs.map((poi) => (
-            <View key={poi.place_id} style={styles.poiRow}>
-              <View style={styles.poiInfo}>
-                <Text style={styles.poiName} numberOfLines={1}>
-                  {poi.name}
-                </Text>
-                {poi.rating && (
-                  <Text style={styles.poiRating}>★ {poi.rating.toFixed(1)}</Text>
-                )}
-              </View>
-              <TouchableOpacity
-                style={[
-                  styles.addBtn,
-                  selectedPOIIds.length >= POI_SELECTION_LIMIT && styles.addBtnDisabled,
-                ]}
-                onPress={() => togglePOI(poi.place_id)}
-                disabled={selectedPOIIds.length >= POI_SELECTION_LIMIT}
-              >
-                <Text style={styles.addBtnText}>+</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
+            {/* Right: remove button for selected */}
+            {isSelected && (
+              <Ionicons name="close-circle" size={20} color={Colors.textDisabled} />
+            )}
+          </TouchableOpacity>
+        );
+      })}
+
+      {discoveredPOIs.length === 0 && (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyText}>No nearby points of interest found</Text>
         </View>
       )}
     </View>
@@ -75,100 +118,92 @@ export default function StopEditor() {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 4,
+    gap: 10,
   },
-  section: {
-    marginBottom: 16,
+  // Header
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
-  sectionTitle: {
-    color: "#999",
+  title: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+  },
+  counter: {
     fontSize: 13,
     fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: 8,
+    color: Colors.textTertiary,
   },
-  stopRow: {
+  // Row
+  row: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: Colors.bgSurface,
     borderRadius: 12,
-    padding: 12,
-    marginBottom: 6,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    gap: 12,
   },
-  stopIndex: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: "#00BFA6",
+  rowSelected: {
+    backgroundColor: Colors.accentLight,
+    borderWidth: 1.5,
+    borderColor: Colors.accent,
+  },
+  // Number badge (selected)
+  stopNum: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: Colors.accent,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
   },
-  stopIndexText: {
-    color: "#fff",
-    fontSize: 12,
+  stopNumText: {
+    color: "#FFFFFF",
+    fontSize: 13,
     fontWeight: "700",
   },
-  stopName: {
+  // Add circle (unselected)
+  addCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: Colors.accent,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  addCircleDisabled: {
+    borderColor: Colors.textDisabled,
+  },
+  // Info
+  info: {
     flex: 1,
-    color: "#fff",
+    gap: 2,
+  },
+  name: {
     fontSize: 15,
+    fontWeight: "600",
+    color: Colors.textPrimary,
   },
-  removeBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "rgba(255,100,100,0.2)",
-    justifyContent: "center",
-    alignItems: "center",
-    marginLeft: 8,
+  nameDisabled: {
+    color: Colors.textTertiary,
   },
-  removeBtnText: {
-    color: "#FF6B6B",
-    fontSize: 18,
-    fontWeight: "700",
-    lineHeight: 20,
-  },
-  poiRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.06)",
-  },
-  poiInfo: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  poiName: {
-    color: "#ccc",
-    fontSize: 14,
-    flex: 1,
-  },
-  poiRating: {
-    color: "#FFB74D",
+  desc: {
     fontSize: 12,
+    color: Colors.textSecondary,
   },
-  addBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "rgba(0,191,166,0.2)",
-    justifyContent: "center",
+  // Empty
+  emptyState: {
+    backgroundColor: Colors.bgSurface,
+    borderRadius: 12,
+    padding: 16,
     alignItems: "center",
-    marginLeft: 8,
   },
-  addBtnDisabled: {
-    opacity: 0.3,
-  },
-  addBtnText: {
-    color: "#00BFA6",
-    fontSize: 18,
-    fontWeight: "700",
-    lineHeight: 20,
+  emptyText: {
+    fontSize: 13,
+    color: Colors.textTertiary,
   },
 });

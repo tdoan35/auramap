@@ -16,7 +16,12 @@ AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "")
 AWS_DEFAULT_REGION = os.getenv("AWS_DEFAULT_REGION", "us-west-2")
 AWS_SESSION_TOKEN = os.getenv("AWS_SESSION_TOKEN", "")
 
+FASTINO_API_KEY = os.getenv("FASTINO_API_KEY", "")
+FASTINO_MODEL_ID = os.getenv("FASTINO_MODEL_ID", "base:meta-llama/Llama-3.3-70B-Instruct")
+FASTINO_API_URL = "https://api.pioneer.ai/inference"
+
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY", "")
 
 NEO4J_URI = os.getenv("NEO4J_URI", "")
 NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")

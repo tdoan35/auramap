@@ -69,6 +69,23 @@ async def run_tour_pipeline(
         "message": f"Outline ready — {len(outline.segments)} segments planned",
     }}
 
+    # Emit outline event so the frontend can show planned segments immediately
+    yield {
+        "event": "outline",
+        "data": {
+            "theme": outline.theme,
+            "segments": [
+                {
+                    "segment_id": seg.segment_id,
+                    "type": seg.type,
+                    "label": seg.label,
+                    "estimated_duration_s": seg.target_duration_s,
+                }
+                for seg in outline.segments
+            ],
+        },
+    }
+
     # Step 3: Generate segments sequentially with quality evaluation
     yield {"event": "status", "data": {"phase": "generating_segments", "message": "Writing your tour narration..."}}
 

@@ -6,19 +6,28 @@ import {
   PanResponder,
   Animated,
 } from "react-native";
+import { Colors } from "@/constants/theme";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
-const COLLAPSED_HEIGHT = 280;
-const EXPANDED_HEIGHT = SCREEN_HEIGHT * 0.65;
+const COLLAPSED_HEIGHT = Math.round(SCREEN_HEIGHT * 0.58);
+const EXPANDED_HEIGHT = Math.round(SCREEN_HEIGHT * 0.82);
 
 interface Props {
   children: React.ReactNode;
   expandable?: boolean;
+  heightAnim?: Animated.Value;
 }
 
-export default function BottomCard({ children, expandable = true }: Props) {
-  const heightAnim = React.useRef(new Animated.Value(COLLAPSED_HEIGHT)).current;
+export default function BottomCard({ children, expandable = true, heightAnim: externalHeightAnim }: Props) {
+  const internalHeightAnim = React.useRef(new Animated.Value(COLLAPSED_HEIGHT)).current;
+  const heightAnim = externalHeightAnim ?? internalHeightAnim;
   const currentHeight = React.useRef(COLLAPSED_HEIGHT);
+
+  // Set initial height on mount
+  React.useEffect(() => {
+    heightAnim.setValue(COLLAPSED_HEIGHT);
+    currentHeight.current = COLLAPSED_HEIGHT;
+  }, [heightAnim]);
   const startY = React.useRef(0);
 
   const panResponder = React.useMemo(
@@ -79,21 +88,26 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: "rgba(20, 20, 20, 0.97)",
+    backgroundColor: Colors.bgPrimary,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     overflow: "hidden",
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    elevation: 12,
   },
   handleContainer: {
     alignItems: "center",
-    paddingTop: 10,
-    paddingBottom: 6,
+    paddingTop: 12,
+    paddingBottom: 8,
   },
   handle: {
-    width: 40,
+    width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: "rgba(255,255,255,0.3)",
+    backgroundColor: Colors.borderStrong,
   },
   content: {
     flex: 1,

@@ -3,7 +3,7 @@ import { Platform } from "react-native";
 // Backend API base URL — set to laptop IP or ngrok URL
 // For physical device: use your laptop's local IP
 // For simulator: localhost works fine
-export const API_BASE_URL = "http://100.105.40.85:8000";
+export const API_BASE_URL = "https://sharp-peas-press.loca.lt";
 
 // Google Maps API key (loaded from app.json > extra or hardcoded for hackathon)
 export const GOOGLE_MAPS_API_KEY = "AIzaSyAfrNAnatP8FaKPJUir75pQIEme-Khk1f0";

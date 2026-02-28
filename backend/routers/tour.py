@@ -8,6 +8,7 @@ from sse_starlette.sse import EventSourceResponse
 
 from backend.models.requests import TourGenerateRequest
 from backend.agent.tour_agent import run_tour_pipeline
+from backend.agent.event_bus import EventBus
 
 router = APIRouter()
 
@@ -19,15 +20,24 @@ async def generate_tour(request: TourGenerateRequest):
     """Start tour generation and stream results via SSE."""
     tour_id = f"tour_{int(time.time() * 1000)}"
 
+    bus = EventBus.get()
+
     async def event_generator():
         try:
-            async with asyncio.timeout(60):
+            async with asyncio.timeout(300):
                 async for event in run_tour_pipeline(request, tour_id):
+                    bus.emit_tour(event["event"], event["data"])
                     yield {
                         "event": event["event"],
                         "data": json.dumps(event["data"]),
                     }
-        except (asyncio.TimeoutError, Exception) as e:
+        except asyncio.TimeoutError:
+            print(f"Pipeline timeout after 300s, falling back to golden path")
+            async for event in serve_golden_path():
+                yield event
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
             print(f"Pipeline error: {e}, falling back to golden path")
             async for event in serve_golden_path():
                 yield event
@@ -53,7 +63,25 @@ async def serve_golden_path():
         "data": json.dumps({"phase": "generating_segments", "message": "Loading tour..."}),
     }
 
-    for segment in data.get("segments", []):
+    # Emit outline event so frontend shows planned segments immediately
+    segments_list = data.get("segments", [])
+    yield {
+        "event": "outline",
+        "data": json.dumps({
+            "theme": data.get("theme", "Walking Tour"),
+            "segments": [
+                {
+                    "segment_id": s.get("segment_id", i),
+                    "type": s.get("type", "transit"),
+                    "label": s.get("label", f"Segment {i+1}"),
+                    "estimated_duration_s": s.get("duration_s", 60),
+                }
+                for i, s in enumerate(segments_list)
+            ],
+        }),
+    }
+
+    for segment in segments_list:
         await asyncio.sleep(0.5)  # Simulate generation delay
         yield {
             "event": "segment",

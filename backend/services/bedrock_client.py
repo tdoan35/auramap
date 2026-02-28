@@ -1,23 +1,5 @@
-import json
-import boto3
-from backend.config import (
-    AWS_ACCESS_KEY_ID,
-    AWS_SECRET_ACCESS_KEY,
-    AWS_DEFAULT_REGION,
-    AWS_SESSION_TOKEN,
-    BEDROCK_MODEL_ID,
-)
-
-
-def get_bedrock_client():
-    kwargs = {
-        "region_name": AWS_DEFAULT_REGION,
-        "aws_access_key_id": AWS_ACCESS_KEY_ID,
-        "aws_secret_access_key": AWS_SECRET_ACCESS_KEY,
-    }
-    if AWS_SESSION_TOKEN:
-        kwargs["aws_session_token"] = AWS_SESSION_TOKEN
-    return boto3.client("bedrock-runtime", **kwargs)
+import requests
+from backend.config import FASTINO_API_KEY, FASTINO_MODEL_ID, FASTINO_API_URL
 
 
 def invoke_claude(
@@ -25,23 +7,35 @@ def invoke_claude(
     system_prompt: str = "",
     max_tokens: int = 2048,
 ) -> str:
-    """Call Bedrock Claude and return the text response."""
-    client = get_bedrock_client()
+    """Call Fastino (Llama 3.3 70B) and return the text response.
 
-    body = {
-        "anthropic_version": "bedrock-2023-05-31",
-        "max_tokens": max_tokens,
-        "messages": [{"role": "user", "content": prompt}],
-    }
+    Keeps the same interface as the old Bedrock client so all callers
+    (generate_outline, generate_segment, city_agent) work unchanged.
+    """
+    messages = []
     if system_prompt:
-        body["system"] = system_prompt
+        messages.append({"role": "system", "content": system_prompt})
+    messages.append({"role": "user", "content": prompt})
 
-    response = client.invoke_model(
-        modelId=BEDROCK_MODEL_ID,
-        contentType="application/json",
-        accept="application/json",
-        body=json.dumps(body),
+    response = requests.post(
+        FASTINO_API_URL,
+        headers={
+            "Content-Type": "application/json",
+            "X-API-Key": FASTINO_API_KEY,
+        },
+        json={
+            "model_id": FASTINO_MODEL_ID,
+            "task": "generate",
+            "messages": messages,
+            "max_tokens": max_tokens,
+        },
+        timeout=60,
     )
+    response.raise_for_status()
 
-    result = json.loads(response["body"].read())
-    return result["content"][0]["text"]
+    data = response.json()
+
+    if "completion" in data:
+        return data["completion"]
+    else:
+        raise ValueError(f"Unexpected Fastino response format: {list(data.keys())}")
